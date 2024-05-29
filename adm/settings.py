@@ -8,21 +8,22 @@ import numpy as np
 import faiss
 import torch
 
-
 warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 SEED = 1337
 
-TRAIN_TEST = False
+TRAIN_TEST = True
 TRAIN_RNG = 1337
 TRAIN_RATIO = 0.9
+
+BATCHES = [2]  # [1, 2, 3]
 
 CPU_CORES = 8
 os.environ['OMP_NUM_THREADS'] = str(CPU_CORES)
 faiss.omp_set_num_threads(CPU_CORES)
 
 TRAIN_TEST_FOLDER = "TRAIN_TEST_"
-# TRAIN_TEST_FOLDER = "TRAIN_TEST_ATTEMPTS_"
 
 DEVICE = 'cuda'
 DEVICE_TORCH: torch.device | None = torch.device('cuda') if DEVICE == 'cuda' else None

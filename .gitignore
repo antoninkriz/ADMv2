@@ -9,7 +9,6 @@ faiss
 models_data/
 results/*/*.csv
 TRAIN_TEST_models_data/
-TRAIN_TEST_results/
 
 data/*.csv
 

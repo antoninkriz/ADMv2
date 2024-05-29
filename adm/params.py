@@ -18,7 +18,7 @@ class EncoderParams(TypedDict):
 
 class PredictParams(TypedDict):
     n_items: int
-    multiplier: int
+    multiplier: float
     cut_items: int
 
 
@@ -35,9 +35,9 @@ def get_params_elsa() -> list[ElsaParams]:
             epochs=elsa_epochs,
         )
         for elsa_batch_size, elsa_n_dims, elsa_epochs in itertools.product(
-            [64, 128, 192],
-            [128, 192, 256],
-            [3, 4, 5, 7],
+            [64, 128, 256],
+            [128, 256],
+            [4, 5, 7],
         )
     ]
 
@@ -50,8 +50,10 @@ def get_params_encoder() -> list[EncoderParams]:
         )
         for model_batch in [
             # ('sentence-transformers/all-mpnet-base-v2', 512),
-            ('mixedbread-ai/mxbai-embed-large-v1', 512),
-            ('nomic-ai/nomic-embed-text-v1.5', 512),
+            # ('mixedbread-ai/mxbai-embed-large-v1', 512),
+            # ('nomic-ai/nomic-embed-text-v1.5', 512),
+            ('nomic-ai/nomic-embed-text-v1', 512),
+            # ('Alibaba-NLP/gte-large-en-v1.5', 512)
         ]
     ]
 
@@ -65,7 +67,8 @@ def get_params_predict() -> list[PredictParams]:
         )
         for predict_n_items, predict_multiplier, predict_cut_items in itertools.product(
             [165],
-            [1, 12, 25, 40, 70, 95, 125],
+            [35, 45, 60, 80, 100],
+            # [30, 40, 50, 70, 100],
             [150]
         )
     ]
@@ -75,12 +78,28 @@ def get_params_best() -> list[tuple[ElsaParams, EncoderParams, PredictParams]]:
     return [
         (
             ElsaParams(
-                n_dims=192,
+                n_dims=128,
                 batch_size=64,
-                epochs=7,
+                epochs=5,
             ),
             EncoderParams(
-                model='nomic-ai/nomic-embed-text-v1.5',
+                model='nomic-ai/nomic-embed-text-v1',
+                batch_size=512,
+            ),
+            PredictParams(
+                n_items=165,
+                multiplier=35,
+                cut_items=150,
+            ),
+        ),
+        (
+            ElsaParams(
+                n_dims=128,
+                batch_size=64,
+                epochs=5,
+            ),
+            EncoderParams(
+                model='nomic-ai/nomic-embed-text-v1',
                 batch_size=512,
             ),
             PredictParams(
@@ -89,68 +108,52 @@ def get_params_best() -> list[tuple[ElsaParams, EncoderParams, PredictParams]]:
                 cut_items=150,
             ),
         ),
-        # (
-        #     ElsaParams(
-        #         n_dims=128,
-        #         batch_size=64,
-        #         epochs=3,
-        #     ),
-        #     EncoderParams(
-        #         model='nomic-ai/nomic-embed-text-v1.5',
-        #         batch_size=512,
-        #     ),
-        #     PredictParams(
-        #         n_items=165,
-        #         multiplier=70,
-        #         cut_items=150,
-        #     ),
-        # ),
-        # (
-        #     ElsaParams(
-        #         n_dims=128,
-        #         batch_size=64,
-        #         epochs=5,
-        #     ),
-        #     EncoderParams(
-        #         model='nomic-ai/nomic-embed-text-v1.5',
-        #         batch_size=512,
-        #     ),
-        #     PredictParams(
-        #         n_items=165,
-        #         multiplier=70,
-        #         cut_items=150,
-        #     ),
-        # ),
-        # (
-        #     ElsaParams(
-        #         n_dims=128,
-        #         batch_size=128,
-        #         epochs=4,
-        #     ),
-        #     EncoderParams(
-        #         model='nomic-ai/nomic-embed-text-v1.5',
-        #         batch_size=512,
-        #     ),
-        #     PredictParams(
-        #         n_items=165,
-        #         multiplier=70,
-        #         cut_items=150,
-        #     ),
-        # ),
-        # (
-        #     ElsaParams(
-        #         n_dims=192,
-        #         batch_size=128,
-        #         epochs=5,
-        #     ),
-        #     EncoderParams(
-        #         model='nomic-ai/nomic-embed-text-v1.5',
-        #         batch_size=512,
-        #     ),
-        #     PredictParams(
-        #         n_items=165,
-        #         multiplier=70,
-        #         cut_items=150,
-        #     ),
-        # )
+        (
+            ElsaParams(
+                n_dims=128,
+                batch_size=64,
+                epochs=5,
+            ),
+            EncoderParams(
+                model='nomic-ai/nomic-embed-text-v1',
+                batch_size=512,
+            ),
+            PredictParams(
+                n_items=165,
+                multiplier=45,
+                cut_items=150,
+            ),
+        ),
+        (
+            ElsaParams(
+                n_dims=128,
+                batch_size=64,
+                epochs=5,
+            ),
+            EncoderParams(
+                model='nomic-ai/nomic-embed-text-v1',
+                batch_size=512,
+            ),
+            PredictParams(
+                n_items=165,
+                multiplier=50,
+                cut_items=150,
+            ),
+        ),
+        (
+            ElsaParams(
+                n_dims=128,
+                batch_size=64,
+                epochs=5,
+            ),
+            EncoderParams(
+                model='nomic-ai/nomic-embed-text-v1',
+                batch_size=512,
+            ),
+            PredictParams(
+                n_items=165,
+                multiplier=65,
+                cut_items=150,
+            ),
+        ),
     ]

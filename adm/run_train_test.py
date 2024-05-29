@@ -53,7 +53,7 @@ def mrr(query_array: np.ndarray, target_array: np.ndarray) -> np.float32:
 #     user_weights += results
 
 
-# @torch.jit.script
+@torch.jit.script
 def torch_sparse_interactions_recc(
         interactions: torch.Tensor,
         a: torch.Tensor,
@@ -326,7 +326,7 @@ def single_run_from_trained_models(
     with open(f'{adm.settings.RESULTS_FOLDER}/{name}/params.json', 'w') as f:
         f.write(json.dumps(combined_params, indent=4))
 
-    for batch_id in ([1, 2, 3] if not adm.settings.TRAIN_TEST else [None]):
+    for batch_id in (adm.settings.BATCHES if not adm.settings.TRAIN_TEST else [None]):
         print(f'- Predicting batch {batch_id if batch_id is not None else "test"}')
 
         if batch_id is not None:
