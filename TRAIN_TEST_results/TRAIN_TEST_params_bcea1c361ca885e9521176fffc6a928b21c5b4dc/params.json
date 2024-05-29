@@ -1,0 +1,16 @@
+{
+    "elsa_params": {
+        "n_dims": 512,
+        "batch_size": 512,
+        "epochs": 5
+    },
+    "encoder_params": {
+        "model": "sentence-transformers/all-mpnet-base-v2",
+        "batch_size": 512
+    },
+    "predict_params": {
+        "n_items": 165,
+        "multiplier": 15,
+        "cut_items": 150
+    }
+}

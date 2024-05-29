@@ -1,0 +1,16 @@
+{
+    "elsa_params": {
+        "n_dims": 512,
+        "batch_size": 64,
+        "epochs": 4
+    },
+    "encoder_params": {
+        "model": "Alibaba-NLP/gte-large-en-v1.5",
+        "batch_size": 512
+    },
+    "predict_params": {
+        "n_items": 165,
+        "multiplier": 40,
+        "cut_items": 150
+    }
+}

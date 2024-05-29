@@ -1,0 +1,16 @@
+{
+    "elsa_params": {
+        "n_dims": 192,
+        "batch_size": 64,
+        "epochs": 3
+    },
+    "encoder_params": {
+        "model": "mixedbread-ai/mxbai-embed-large-v1",
+        "batch_size": 512
+    },
+    "predict_params": {
+        "n_items": 165,
+        "multiplier": 125,
+        "cut_items": 150
+    }
+}
