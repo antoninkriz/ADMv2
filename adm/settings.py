@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 SEED = 1337
 
-TRAIN_TEST = True
+TRAIN_TEST = False
 TRAIN_RNG = 1337
 TRAIN_RATIO = 0.9
 

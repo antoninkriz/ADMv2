@@ -105,6 +105,8 @@ def predict_batch(
         'cut_items']
     users_series, tensor_query_data = enc_batch
 
+    df_train_items = df_train[0]['_items']
+
     results = torch.zeros((len(users_series), 100), dtype=torch.int32, device=adm.settings.DEVICE_TORCH)
 
     arranged = torch.arange(2 ** 14, dtype=torch.int32, device=adm.settings.DEVICE_TORCH)
@@ -129,9 +131,9 @@ def predict_batch(
             items_tmp = []
             weights_tmp = []
             for dist, q_i in zip(distances, found_query):
-                found = df_train[0][int(q_i), '_items']
+                found = df_train_items[int(q_i)]
                 items_tmp.extend(found)
-                weights_tmp.extend(np.repeat(float(dist) * multiplier, len(found)))
+                weights_tmp.extend([float(dist) * multiplier] * len(found))
 
             assert len(items_tmp) >= 100
 
@@ -246,6 +248,8 @@ def predict_train_test(
     assert len(found_queries[0]) == n_items
     assert len(tensor_query_data) == len(distances) == len(found_queries)
 
+    df_train_items = df_train[0]['_items']
+
     arranged = torch.arange(2 ** 14, dtype=torch.int32, device=adm.settings.DEVICE_TORCH)
     ones = torch.ones_like(arranged, dtype=torch.float32, device=adm.settings.DEVICE_TORCH)
 
@@ -254,9 +258,9 @@ def predict_train_test(
         items_tmp = []
         weights_tmp = []
         for dist, q_i in zip(distance, found_query):
-            found = df_train[0][int(q_i), '_items']
+            found = df_train_items[int(q_i)]
             items_tmp.extend(found)
-            weights_tmp.extend(np.repeat(float(dist) * multiplier, len(found)))
+            weights_tmp.extend([float(dist) * multiplier] * len(found))
 
         assert len(items_tmp) >= 100
 

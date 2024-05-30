@@ -35,9 +35,9 @@ def get_params_elsa() -> list[ElsaParams]:
             epochs=elsa_epochs,
         )
         for elsa_batch_size, elsa_n_dims, elsa_epochs in itertools.product(
-            [64, 128, 256],
+            [64, 128],
             [128, 256],
-            [4, 5, 7],
+            [4, 5],
         )
     ]
 
@@ -67,8 +67,7 @@ def get_params_predict() -> list[PredictParams]:
         )
         for predict_n_items, predict_multiplier, predict_cut_items in itertools.product(
             [165],
-            [35, 45, 60, 80, 100],
-            # [30, 40, 50, 70, 100],
+            [30, 40, 65, 100],
             [150]
         )
     ]
@@ -76,70 +75,6 @@ def get_params_predict() -> list[PredictParams]:
 
 def get_params_best() -> list[tuple[ElsaParams, EncoderParams, PredictParams]]:
     return [
-        (
-            ElsaParams(
-                n_dims=128,
-                batch_size=64,
-                epochs=5,
-            ),
-            EncoderParams(
-                model='nomic-ai/nomic-embed-text-v1',
-                batch_size=512,
-            ),
-            PredictParams(
-                n_items=165,
-                multiplier=35,
-                cut_items=150,
-            ),
-        ),
-        (
-            ElsaParams(
-                n_dims=128,
-                batch_size=64,
-                epochs=5,
-            ),
-            EncoderParams(
-                model='nomic-ai/nomic-embed-text-v1',
-                batch_size=512,
-            ),
-            PredictParams(
-                n_items=165,
-                multiplier=40,
-                cut_items=150,
-            ),
-        ),
-        (
-            ElsaParams(
-                n_dims=128,
-                batch_size=64,
-                epochs=5,
-            ),
-            EncoderParams(
-                model='nomic-ai/nomic-embed-text-v1',
-                batch_size=512,
-            ),
-            PredictParams(
-                n_items=165,
-                multiplier=45,
-                cut_items=150,
-            ),
-        ),
-        (
-            ElsaParams(
-                n_dims=128,
-                batch_size=64,
-                epochs=5,
-            ),
-            EncoderParams(
-                model='nomic-ai/nomic-embed-text-v1',
-                batch_size=512,
-            ),
-            PredictParams(
-                n_items=165,
-                multiplier=50,
-                cut_items=150,
-            ),
-        ),
         (
             ElsaParams(
                 n_dims=128,

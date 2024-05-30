@@ -1,0 +1,16 @@
+{
+    "elsa_params": {
+        "n_dims": 128,
+        "batch_size": 64,
+        "epochs": 4
+    },
+    "encoder_params": {
+        "model": "nomic-ai/nomic-embed-text-v1",
+        "batch_size": 512
+    },
+    "predict_params": {
+        "n_items": 165,
+        "multiplier": 120,
+        "cut_items": 150
+    }
+}
