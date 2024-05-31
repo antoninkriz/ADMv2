@@ -17,7 +17,7 @@ TRAIN_TEST = False
 TRAIN_RNG = 1337
 TRAIN_RATIO = 0.9
 
-BATCHES = [2]  # [1, 2, 3]
+BATCHES = [1, 2, 3]
 
 CPU_CORES = 8
 os.environ['OMP_NUM_THREADS'] = str(CPU_CORES)
