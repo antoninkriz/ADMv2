@@ -1,0 +1,124 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{minted}
+\usepackage{xcolor}
+\usepackage[sorting=none]{biblatex}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+
+\addbibresource{citations.bib}
+
+\AtBeginDocument{%
+    \definecolor{codebg}{HTML}{212121}%
+    \setminted{bgcolor={codebg}, style={vim}, fontsize=\small, breaklines=true}%
+}
+
+
+\title{Personalised Semantic Search Competition\\{\large{NI-ADM}}}
+\author{Antonín Kříž}
+\date{2024-05-31}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The goal of this competition is to build a personalised semantic search recommendation system. Based on the training dataset with $7,761,370$ entries of \texttt{UserID~(int), Query~(text), ItemID~(int)} triplets of $100,000$ unique users, $39,976$ unique items and $59,999$ unique queries, the system should recommend top 100 items given a \texttt{UserID~(int)} + \texttt{Query~(text)} pair. The result is evaluated using Mean Reciprocal Rank\cite{wikimrr} (MRR) of the correct items that should've been predicted the first.
+
+\section{Approach}
+
+The solution I came up with was in Python, combining the power of Sentence Transformers\footnote{\url{https://www.sbert.net/}}\cite{sts, sbert} and ELSA\cite{elsa} - Scalable Linear Shallow Autoencoder for Collaborative Filtering. I used Sentence Transformers to compute the Semantic Textual Similarity (STS) of the input query and the queries in the dataset, extracted the top-K most similar queries and the items linked to these queries. Then ELSA was used to compute the item embeddings to calculate the recommendation score of each of these items, which decided, together with the weighted similarity of the query linked to the item, the final order of the recommended list of items. The approach is summarised in the pseudo code bellow.
+
+\begin{listing}[!ht]
+\begin{minted}[escapeinside=||,mathescape=true,highlightcolor=]{py}
+|$A$| = ELSA.get_embeddings()
+|$X$| = DATASET.load_interaction_matrix()
+
+for user, query in test_dataset:
+    encoded_query = STS_TRANSFORMER.encode(query)
+    distances, items = INDEX.find_top_k(|$k$|, encoded_query)
+    items = items[:|$limit$|]
+    distances = distances[:|$limit$|]
+    |$w$| = [distances[item] |$\cdot$| |$weight$| for item in items]
+    |$x$| = |$X_{user, :}$|
+    order_score = |$((xAA^T) - x)_{items}$|
+    results.append(
+        items.sort_by_score(|$w\ +$| order_score)[:100]
+    )
+\end{minted}
+\caption{Pseudocode of the approach}
+\label{code:pseudo}
+\end{listing}
+
+This model has multiple hyper-parameters, which need to be optimised. The optimisation procedure will be discussed in the next chapter.
+
+\section{Challenges}
+
+The approach above comes with multiple challenges. First challenge comes with the interaction matrix. Since the matrix has a dimension of $100,000\times40,000$, the memory requirements to just store it are over 14.9 GB (implying the use of float32). Although this is still manageable on my setup\footnote{Intel i7-11700, 80 GB RAM, NVIDIA RTX 3070} when using CPU for computations, it isn't possible to fit in GPU VRAM. This leads to the usage of sparse matrices, since the interaction matrix is mostly empty (\~99.81 \%), this also comes with the benefit of faster computation. Sparse matrices come with another set of problems, mainly with far-from-perfect support in PyTorch\cite{PyTorchSparse}. For example, PyTorch does not support indexing of sparse matrices with arrays, which leads to the need of building sparse selection matrices (an identity matrix, which contains only rows of requested columns), and arithmetic operations, which requires careful conversion between sparse and dense tensors.
+
+Next challenge is the hyper-parameter optimisation. The model uses following hyper-parameters with given values:
+\begin{itemize}
+    \item ELSA \begin{itemize}
+        \item \texttt{n\_dims\phantom{\ \ \ \ }} Number of factors of the latent-space\\
+        \phantom{\ \ \ \ }$[64, 128, 192, 256, 512, 1024]$
+        \item \texttt{batch\_size} Number of items processed at once\\
+        \phantom{\ \ \ \ }$[64, 128, 256, 512]$
+        \item \texttt{epochs\phantom{\ \ \ \ }} Number of epochs\\
+        \phantom{\ \ \ \ }$[3, 4, 5, 6, 7, 9, 11, 15]$
+    \end{itemize}
+    \item STS Encoder \begin{itemize}
+        \item \texttt{model\phantom{\ \ \ \ \ }} What model should be used \begin{itemize}
+            \item \texttt{sentence-transformers/all-mpnet-base-v2}\cite{sbert}
+            \item \texttt{mixedbread-ai/mxbai-embed-large-v1}\cite{mxbai1, mxbai2}
+            \item \texttt{nomic-ai/nomic-embed-text-v1.5}\cite{nomic}
+            \item \texttt{nomic-ai/nomic-embed-text-v1}\cite{nomic}
+            \item \texttt{Alibaba-NLP/gte-large-en-v1.5}\cite{ali}
+        \end{itemize}
+    \end{itemize}
+    \item Prediction \begin{itemize}
+        \item \texttt{k\phantom{\ \ \ \ \ \ \ \ \ }} Number of most similar sentences to fetch from the index\\
+        \phantom{\ \ \ \ }$[165, 200]$
+        \item \texttt{weight\phantom{\ \ \ \ }} Weight to scale the sentence distance with\\
+        \phantom{\ \ \ \ }from $0$ to $200$ with the step size of $5$
+        \item \texttt{limit\phantom{\ \ \ \ \ }} Cutoff limit of  the number of items to process\\
+        \phantom{\ \ \ \ }$[150, 350]$
+    \end{itemize}
+\end{itemize}
+To find the optimal values, I searched the space of possible combinations of each parameter with incrementally focusing on more promising examples based on the MRR score on $0.9$ to $0.1$ train-test split to reduce the total number of possible combinations from millions to just over $1,300$. Searching through this number of combinations would not be possible without optimisations mentioned in the beginning of this sections, which allowed me to finish a single run of the model in less than one and a half minute.
+
+The final challenge was the limit on the number of allowed submissions per day in the system, so  had to selected just a few results which seemed as the most promising ones. The hyper-parameter tuning process was verified using the competition system on the 2nd batch. These "validation" submissions were done to prevent over-fitting on the training dataset. Because of large number of common queries in test and train split, the hyper-parameter tuning preferred models with large \texttt{weight} parameter, but the 2nd batch preferred lower weights in the range of 30 to 70.
+
+\section{Results}
+
+The hyper-parameter tuning led to the selection of my final model:
+\begin{table}[!ht]
+\begin{center}
+    \begin{tabular}{ |l|r| } 
+     \hline
+     ELSA \texttt{n\_dims} & 128 \\
+     \hline
+     ELSA \texttt{batch\_size} & 64 \\
+     \hline
+     ELSA \texttt{epochs} & 5 \\
+     \hline
+     STS \texttt{model} & \texttt{nomic-ai/nomic-embed-text-v1} \\
+     \hline
+     Prediction \texttt{k} & 165 \\
+     \hline
+     Prediction \texttt{weight} & 65 \\
+     \hline
+     Prediction \texttt{limit} & 150 \\
+     \hline
+    \end{tabular}
+    \caption{Final model hyper-parameters}
+\end{center}
+\end{table}
+
+This model's MRR score was $0.3487$, $0.3444$ and $0.3458$ on the 2nd batch dataset, leading to an average of $0.3463$ and over $0.8043$ on the test split.
+
+The final code of this model, including it's hyper-parameter optimisation results, is available\\ at \url{https://github.com/antoninkriz/ADMv2}.
+
+\printbibliography
+
+\end{document}
